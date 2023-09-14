@@ -4,6 +4,7 @@ using Ecommerce.Common.Interfaces;
 using Ecommerce.Common.Models;
 using System;
 using System.Collections.Generic;
+using System.Data.Entity.Core;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -32,8 +33,17 @@ namespace Ecommerce.Business.Services
         public async Task DeleteAddressAsync(AddressDelete addressDelete)
         {
             var entity = await AddressRepository.GetByIdAsync(addressDelete.Id);
-            AddressRepository.Delete(entity);
-            await AddressRepository.SaveChangesAsync();
+            if (entity !=null)
+            {
+                AddressRepository.Delete(entity);
+                await AddressRepository.SaveChangesAsync();
+            }
+            else
+            {
+                throw new EntityException($"The Address Doesn't Exists {entity}");
+            }
+    
+
         }
 
         public async Task<List<AddressGet>> GetAddressesAsync()

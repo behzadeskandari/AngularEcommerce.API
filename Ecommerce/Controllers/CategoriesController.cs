@@ -17,6 +17,7 @@ namespace Ecommerce.Controllers
         {
             CategoriesServices = categoriesServices;
         }
+
         [HttpPost]
         [Route("Create")]
         public async Task<IActionResult> CreateCategories(CategoriesCreate teamCreate)

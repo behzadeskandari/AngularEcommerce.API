@@ -8,6 +8,8 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using Ecommerce.Infrastructure;
+
 
 namespace Ecommerce.Business.Services
 {
@@ -22,6 +24,7 @@ namespace Ecommerce.Business.Services
             Mapper = mapper;
             OrdersRepository = ordersRepository;
         }
+
         public async Task<int> CreateOrdersAsync(OrdersCreate objCreate)
         {
             var entity = Mapper.Map<Orders>(objCreate);
@@ -33,8 +36,16 @@ namespace Ecommerce.Business.Services
         public async Task DeleteOrdersAsync(OrdersDelete objDelete)
         {
             var entity = await OrdersRepository.GetByIdAsync(objDelete.Id);
-            OrdersRepository.Delete(entity);
-            await OrdersRepository.SaveChangesAsync();
+            if (entity != null)
+            {
+                OrdersRepository.Delete(entity);
+                await OrdersRepository.SaveChangesAsync();
+            }
+            else
+            {
+                throw new EntityNotFoundException("Order not found");
+            }
+            
         }
 
         public async Task<List<OrdersGet>> GetOrdersAsync()

@@ -5,6 +5,7 @@ using Ecommerce.Common.Interfaces;
 using Ecommerce.Common.Models;
 using System;
 using System.Collections.Generic;
+using System.Data.Entity.Core;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -34,8 +35,15 @@ namespace Ecommerce.Business.Services
         public async Task DeleteCategoriesAsync(CategoriesDelete objDelete)
         {
             var entity = await CategoriesRepository.GetByIdAsync(objDelete.Id);
-            CategoriesRepository.Delete(entity);
-            await CategoriesRepository.SaveChangesAsync();
+            if (entity != null)
+            {
+                CategoriesRepository.Delete(entity);
+                await CategoriesRepository.SaveChangesAsync();
+            }
+            else
+            {
+                throw new EntityException($"The Categories Doesn't Exists {entity}");
+            }
         }
 
         public async Task<List<CategoriesGet>> GetCategoriesAsync()
