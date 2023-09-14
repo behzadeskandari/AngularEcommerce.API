@@ -20,7 +20,7 @@ namespace Ecommerce.Common.Dtos.OrdersDto
         public int Phone { get; set; }
         public string Status { get; set; }
         public int TotalPrice { get; set; }
-        public ApplicationUserDto User { get; set; }
+        public UserDto.UserDto User { get; set; }
         public DateTime DateOrdered { get; set; }
     }
 }

@@ -25,6 +25,8 @@ namespace Ecommerce.Business
             //CreateMap<AddressDelete, Address>();
             //CreateMap<AddressUpdate, Address>();
             //CreateMap<Address, AddressGet>();
+            CreateMap<ApplicationUser, UserDto>().ReverseMap();
+
             CreateMap<ProductsGet, Products>();
             CreateMap<ProductsDelete, Products>();
             CreateMap<ProductsUpdate, Products>();
@@ -69,7 +71,6 @@ namespace Ecommerce.Business
                 .ForMember(dest => dest.Job, opt => opt.Ignore())
                 .ForMember(dest => dest.Address, opt => opt.Ignore());
             //CreateMap<Employee, EmployeeGet>();
-
             CreateMap<Employee, EmployeeList>();
 
             CreateMap<TeamCreate, Team>().ForMember(dest => dest.Id, opt => opt.Ignore()).ForMember(dest => dest.Employees, opt => opt.Ignore());
