@@ -1,8 +1,13 @@
-﻿using Ecommerce.Data;
+﻿using Ecommerce.Business;
+using Ecommerce.Business.Services;
+using Ecommerce.Common.Interfaces;
+using Ecommerce.Common.Models;
+using Ecommerce.Data;
 using Ecommerce.Infrastructure;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.OpenApi.Models;
 using System;
 
 namespace Ecommerce
@@ -20,7 +25,10 @@ namespace Ecommerce
         public void ConfigureServices(IServiceCollection services)
         {
 
-            services.AddDbContext<ApplicationDbContext>(opt => opt.UseSqlServer(Configuration.GetConnectionString("DefaultConnection")));
+            services.AddDbContext<ApplicationDbContext>(opt => {
+                opt.UseSqlServer(Configuration.GetConnectionString("DefaultConnection"), assembly => assembly.MigrationsAssembly("Ecommerce.Infrastructure"));
+                
+            });
 
             /////Services Configuration
             //services.AddScoped<IActorService, ActorService>();
@@ -38,11 +46,34 @@ namespace Ecommerce
             //services.AddScoped(sc => ShoppingCart.GetShoppingCart(sc));
 
             ////Authentication And Authorization 
-            //services.AddIdentity<ApplicationUser, IdentityRole>().AddEntityFrameworkStores<AppDbContext>();
+            services.AddAutoMapper(typeof(DtoEntityMapperProfile));
+
+            DIConfiguration.RegisterServices(services);
+            services.AddScoped<IGenericRepository<Address>, GenericRepository<Address>>();
+            services.AddScoped<IGenericRepository<OrderItem>, GenericRepository<OrderItem>>();
+            services.AddScoped<IGenericRepository<Orders>, GenericRepository<Orders>>();
+            services.AddScoped<IGenericRepository<Categories>, GenericRepository<Categories>>();
+            services.AddScoped<IGenericRepository<Products>, GenericRepository<Products>>();
+            services.AddScoped<IGenericRepository<Team>, GenericRepository<Team>>();
+            services.AddScoped<IGenericRepository<Job>, GenericRepository<Job>>();
+            services.AddScoped<IGenericRepository<Employee>, GenericRepository<Employee>>();
+            services.AddScoped<IGenericRepository<Address>, GenericRepository<Address>>();
+
+            //services.AddIdentity<ApplicationUser, IdentityRole>().AddEntityFrameworkStores<ApplicationDbContext>();
+
+            services.AddIdentity<ApplicationUser, IdentityRole>().AddEntityFrameworkStores<ApplicationDbContext>().AddDefaultTokenProviders();
+            
+            services.AddEndpointsApiExplorer();
+
+            //services.AddControllers();
+            services.AddSwaggerGen(c =>
+            {
+                c.SwaggerDoc("v1", new OpenApiInfo { Title = "Ecommerce", Version = "v1" });
+            });
+            services.AddHttpContextAccessor();
 
             services.AddMemoryCache();
 
-            services.AddAuthentication();
 
             services.AddAuthentication(opt =>
             {
@@ -61,6 +92,8 @@ namespace Ecommerce
             if (env.IsDevelopment())
             {
                 app.UseDeveloperExceptionPage();
+                app.UseSwagger();
+                app.UseSwaggerUI(c => c.SwaggerEndpoint("/swagger/v1/swagger.json", "Ecommerce v1"));
             }
             else
             {
@@ -77,7 +110,7 @@ namespace Ecommerce
 
 
             app.UseAuthentication();
-
+            
             app.UseAuthorization();
 
             app.UseEndpoints(endpoints =>
@@ -88,7 +121,7 @@ namespace Ecommerce
             });
 
             AppDbInitializer.Seed(app);
-            AppDbInitializer.SeedUserAndRolesAsync(app).Wait();
+           // AppDbInitializer.SeedUserAndRolesAsync(app).Wait();
 
         }
     }

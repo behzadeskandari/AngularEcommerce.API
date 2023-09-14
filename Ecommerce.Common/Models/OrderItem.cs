@@ -8,7 +8,7 @@ namespace Ecommerce.Common.Models
 {
     public class OrderItem : BaseEntity
     {
-        public Products products { get; set; }
-        public int quantity { get; set; }
+        public Products Products { get; set; }
+        public int Quantity { get; set; }
     }
 }

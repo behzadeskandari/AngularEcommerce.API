@@ -18,9 +18,9 @@ namespace Ecommerce.Common.Dtos.OrdersDto
         public string Zip { get; set; }
         public string Country { get; set; }
         public int Phone { get; set; }
-        public string status { get; set; }
-        public int totalPrice { get; set; }
+        public string Status { get; set; }
+        public int TotalPrice { get; set; }
         public ApplicationUserDto User { get; set; }
-        public DateTime dateOrdered { get; set; }
+        public DateTime DateOrdered { get; set; }
     }
 }

@@ -62,7 +62,7 @@ namespace Ecommerce.Infrastructure
             IQueryable<T> query = DbSet;
 
             foreach (var fillter in fillters)
-                query = query.Include(fillter);
+                query = query.Where(fillter);
 
             foreach (var include in includes)
                 query = query.Include(include);
@@ -94,6 +94,11 @@ namespace Ecommerce.Infrastructure
             DbSet.Attach(entity);
             _context.Entry(entity).State = EntityState.Modified;
 
+        }
+
+        public Task<List<T>> GetFilteredAysnc(object fileterObject, int? skip, int? take, params Expression<Func<T, object>>[] includes)
+        {
+            throw new NotImplementedException();
         }
     }
 }

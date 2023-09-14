@@ -10,7 +10,6 @@ namespace Ecommerce.Common.Models
     public class ShoppingCartItem : BaseEntity
     {
 
-        public int Id { get; set; }
 
         public List<Products> products { get; set; }
 

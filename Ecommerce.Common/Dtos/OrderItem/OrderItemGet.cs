@@ -10,7 +10,7 @@ namespace Ecommerce.Common.Dtos.OrderItemDto
     public class OrderItemGet
     {
         public int Id { get; set; }
-        public Products products { get; set; }
-        public int quantity { get; set; }
+        public Products Products { get; set; }
+        public int Quantity { get; set; }
     }
 }

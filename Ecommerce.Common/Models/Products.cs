@@ -9,18 +9,18 @@ namespace Ecommerce.Common.Models
     public class Products : BaseEntity
     {
         public string Name { get; set; } = default!;
-        public string image { get; set; } = default!;
-        public string description { get; set; } = default!;
-        public string richDescription { get; set; } = default!;
-        public string brand { get; set; } = default!;
-        public int price { get; set; } = default!;
+        public string Image { get; set; } = default!;
+        public string Description { get; set; } = default!;
+        public string RichDescription { get; set; } = default!;
+        public string Brand { get; set; } = default!;
+        public int Price { get; set; } = default!;
         public int CountInStock { get; set; } = default!;
-        public int rating { get; set; }
-        public bool isFeatured { get; set; }
-        public DateTime dateCreated { get; set; }
+        public int Rating { get; set; }
+        public bool IsFeatured { get; set; }
+        public DateTime DateCreated { get; set; }
         public Categories Category { get; set; }
 
     }
 
-    //:TODO getList getSingle remove add update delete 
+
 }

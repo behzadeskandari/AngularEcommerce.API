@@ -11,6 +11,7 @@ namespace Ecommerce.Common.Interfaces
     public interface IGenericRepository<T> where T : BaseEntity //<int>
     {
         Task<List<T>> GetFilteredAysnc(Expression<Func<T, bool>>[] fillters, int? skip, int? take, params Expression<Func<T, object>>[] includes);
+        Task<List<T>> GetFilteredAysnc(object fileterObject,int? skip, int? take, params Expression<Func<T, object>>[] includes);
 
         Task<List<T>> GetAysnc(int? skip, int? take, params Expression<Func<T, object>>[] includes);
 

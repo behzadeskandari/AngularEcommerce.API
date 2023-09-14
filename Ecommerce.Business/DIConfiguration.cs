@@ -14,10 +14,17 @@ namespace Ecommerce.Business
     {
         public static void RegisterServices(IServiceCollection services)
         {
+
+            
             services.AddScoped<IOrderItemServices, OrederItemServices>();
             services.AddScoped<IOrdersService,OrdersService>();
             services.AddScoped<ICategoriesServices, CategoriesServices>();
             services.AddScoped<IProductsServices, ProductsServices>();
+            services.AddScoped<IProductsServices, ProductsServices>();
+            services.AddScoped<ITeamService, TeamService>();
+            services.AddScoped<IJobService, JobService>();
+            services.AddScoped<IEmployeeService, EmployeeService>();
+            services.AddScoped<IAddressService, AddressService>();
         }
     }
 }
