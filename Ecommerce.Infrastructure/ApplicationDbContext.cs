@@ -75,7 +75,7 @@ namespace Ecommerce.Infrastructure
         public DbSet<Orders> Orders { get; set; }
         public DbSet<Products> Products { get; set; }
         public DbSet<ShoppingCartItem> ShoppingCartItems { get; set; }
-
+        //public DbSet<ApplicationUser> AppUsers { get; set; }
         //Team And Jobs Sets
         public DbSet<Address> Addresses { get; set; }
         public DbSet<Employee> Employees { get; set; }

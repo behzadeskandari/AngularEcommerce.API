@@ -159,7 +159,7 @@ namespace Ecommerce.Data
                            
                            User = new ApplicationUser()
                            {
-                               Id = "1",
+                               Id = "4",
                                FirstName = "behzad",
                                LastName = "Eskandari",
                                Email = "Behzad.b.i.g@gmail.com"
@@ -268,17 +268,18 @@ namespace Ecommerce.Data
                 var userManager = serviceScope.ServiceProvider.GetRequiredService<UserManager<ApplicationUser>>();
                 string adminUserEmail = "behzad.b.i.g@gmail.com";
                 var adminuser = await userManager.FindByNameAsync(adminUserEmail);
+
                 if (adminuser == null)
                 {
                     var newAdminUser = new ApplicationUser()
                     {
-                        Id = Guid.NewGuid().ToString(),
+                        Id = 5.ToString(),
                         FirstName = "behzad ",
                         LastName = "eskandari",
                         UserName = "admin-user",
                         Email = adminUserEmail,
                         EmailConfirmed = true,
-                        SecurityStamp = "behzad",
+                        SecurityStamp = DateTime.Now.ToString(),
                     };
                     await userManager.CreateAsync(newAdminUser, "coding@1234?");
                     await userManager.AddToRoleAsync(newAdminUser, UserRoles.Admin);
@@ -292,12 +293,13 @@ namespace Ecommerce.Data
                 {
                     var newappUser = new ApplicationUser()
                     {
-                        Id = Guid.NewGuid().ToString(),
+                        Id = 6.ToString(),
                         FirstName = "Application User",
                         LastName = "Application User",
                         UserName = "app-user",
                         Email = appUserEmail,
-                        EmailConfirmed = true
+                        EmailConfirmed = true,
+                        SecurityStamp = DateTime.Now.ToString(),
                     };
 
                     await userManager.CreateAsync(newappUser, "coding@1234?");

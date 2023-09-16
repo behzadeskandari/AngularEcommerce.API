@@ -8,6 +8,7 @@
 
   <ItemGroup>
     <PackageReference Include="Microsoft.AspNet.Identity.EntityFramework" Version="2.2.4" />
+    <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="6.0.21" />
     <PackageReference Include="Microsoft.Extensions.Identity.Stores" Version="6.0.21" />
     <PackageReference Include="NLog.Database" Version="5.2.4" />
     <PackageReference Include="NLog.Web.AspNetCore" Version="5.3.4" />

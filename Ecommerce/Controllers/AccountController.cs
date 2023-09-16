@@ -1,15 +1,19 @@
 ﻿using AutoMapper;
 using Ecommerce.Common.BindingModels;
+using Ecommerce.Common.Dtos.User;
 using Ecommerce.Common.Dtos.UserDto;
 using Ecommerce.Common.Interfaces;
 using Ecommerce.Common.Models;
 using Ecommerce.Common.Statics;
 using Ecommerce.Infrastructure;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Rewrite;
 using Microsoft.Extensions.Logging;
 using Microsoft.Identity.Client;
 using Microsoft.Identity.Web;
+using System.Data.Entity;
 
 namespace Ecommerce.Controllers
 {
@@ -22,12 +26,14 @@ namespace Ecommerce.Controllers
         private readonly ILogger<AddressController> _logger;
         private readonly UserManager<ApplicationUser> _userManger;
         private readonly SignInManager<ApplicationUser> _signInManager;
-        private readonly RoleManager<ApplicationUser> _roleManager;
+        private readonly RoleManager<IdentityRole> _roleManager;
         private readonly IMapper _mapper;
+        public readonly ITokenService _tokenService;
 
-
-        public AccountController(ILogger<AddressController> logger, UserManager<ApplicationUser> userManger, SignInManager<ApplicationUser> signInManager,
-            RoleManager<ApplicationUser> roleManager,
+        public AccountController(ILogger<AddressController> logger, UserManager<ApplicationUser> userManger,
+            SignInManager<ApplicationUser> signInManager,
+            RoleManager<IdentityRole> roleManager,
+            ITokenService tokenService,
             IMapper mapper)
         {
             //AddressService = addressService;
@@ -36,6 +42,7 @@ namespace Ecommerce.Controllers
             _signInManager = signInManager;
             _mapper = mapper;
             _roleManager = roleManager;
+            _tokenService = tokenService;
         }
 
         [HttpPost]
@@ -51,42 +58,41 @@ namespace Ecommerce.Controllers
             try
             {
                 var user = _mapper.Map<ApplicationUser>(userDto);
-                
-                var result = await _userManger.CreateAsync(user);
-                if (!result.Succeeded)
-                {
-                    return BadRequest($"Error In Creating TryAgain");
-                }
-                else if(userDto.IsAdmin)
-                {
-                    if (!await _roleManager.RoleExistsAsync(userDto.Role))
-                    {
-                        var newRole = new IdentityRole(userDto.Role);
-                        var Roleresult = await _roleManager.CreateAsync(user);
 
-                        if (!Roleresult.Succeeded)
+                user.UserName = userDto.UserName;
+                user.FirstName = userDto.FirstName;
+                user.LastName = userDto.LastName;
+                user.PhoneNumber = userDto.PhoneNumber;
+                var userFinded = await _userManger.FindByEmailAsync(user.Email);
+                if (userFinded == null)
+                {
+
+                    var result = await _userManger.CreateAsync(user, userDto.Password);
+
+                    if (!result.Succeeded)
+                    {
+                        // Role creation successful
+                        foreach (var error in result.Errors)
                         {
-                            // Role creation successful
-                            _logger.LogError($"Something went Wrong in the Regiter Method{nameof(Register)}");
-                            return Problem($"Something Went Wrong in the {nameof(Register)}", statusCode: 500);
+                            _logger.LogError($"User Creation Went Wrong {error}");
                         }
-                    }
-                    else
-                    {
-                        _logger.LogError($"Something went Wrong in the Regiter Method{nameof(Register)}");
-                        return Problem($"Something Went Wrong in the {nameof(Register)}", statusCode: 409);
+                        return Problem($"Something Went Wrong in the {nameof(Register)}", statusCode: 500);
                     }
 
                 }
-                return Ok(result);
+                else if (userFinded.Email == userDto.Email)
+                    {
+                        return BadRequest($"User Already Exists {userDto.Email}");
+                    }
+                return Ok(user);
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, $"Something went Wrong in the Regiter Method{nameof(Register)}");
-               
+
                 //throw new EntityNotFoundException("Entity Not found", ex.InnerException);
                 //return StatusCode(500,$"Internal Server Error Please Try Again ");
-                return Problem($"Something Went Wrong in the {nameof(Register)}",statusCode: 500);
+                return Problem($"Something Went Wrong in the {nameof(Register)}", statusCode: 500);
             }
         }
 
@@ -102,10 +108,12 @@ namespace Ecommerce.Controllers
             }
             try
             {
-                var result = await _signInManager.PasswordSignInAsync(userDto.Email, userDto.Password,false,false);
+                var result = await _signInManager.PasswordSignInAsync(userDto.UserName, userDto.Password, false, false);
+
+
                 if (!result.Succeeded)
                 {
-                    return Unauthorized($"Unauthorized {userDto}");
+                    return Unauthorized($"Unauthorized {userDto} UserName Or Password Is Wrong");
                 }
                 else
                 {
@@ -121,11 +129,11 @@ namespace Ecommerce.Controllers
                         });
                     }
                     string role = _userManger.GetRolesAsync(tempUser).Result.FirstOrDefault() ?? "";
-                    if (role != UserRoles.Admin)
+                    if (role == UserRoles.Admin)
                     {
                         userDto.Claims.Add(new UserClaimsDto() { ClaimType = UserRoles.Admin, ClaimValue = role });
                     }
-                    if (role != UserRoles.User)
+                    if (role == UserRoles.User)
                     {
                         userDto.Claims.Add(new UserClaimsDto() { ClaimType = UserRoles.User, ClaimValue = role });
                     }
@@ -133,6 +141,8 @@ namespace Ecommerce.Controllers
                     userDto.LastName = tempUser.LastName;
                     userDto.Role = role;
                     userDto.Email = tempUser.Email;
+                    userDto.Token = _tokenService.CreateToken(tempUser);
+
                 }
 
                 return Accepted(userDto);
@@ -145,7 +155,189 @@ namespace Ecommerce.Controllers
                 //return StatusCode(500,$"Internal Server Error Please Try Again ");
                 return Problem($"Something Went Wrong in the {nameof(Register)}", statusCode: 500);
             }
+
         }
+
+
+
+        [HttpGet]
+        [Route("UserCount")]
+
+        public async Task<IActionResult> UserCount()
+        {
+            try
+            {
+                var userCount = await _userManger.Users.CountAsync();
+                return Ok(userCount);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, $"Something went Wrong in the Regiter Method{nameof(Register)}");
+                //throw new EntityNotFoundException("Entity Not found", ex.InnerException);
+                //return StatusCode(500,$"Internal Server Error Please Try Again ");
+                return Problem($"Something Went Wrong in the {nameof(Register)}", statusCode: 500);
+            }
+
+        }
+
+
+        [HttpPost]
+        [Route("DeleteUser")]
+        public async Task<IActionResult> DeleteUser(string UserId)
+        {
+
+            try
+            {
+                var user = await _userManger.FindByIdAsync(UserId);
+                if (user == null)
+                {
+                    return NotFound("User Not Found");
+                }
+
+                var result = await _userManger.DeleteAsync(user);
+                if (result.Succeeded)
+                {
+                    return Ok("User Deleted Successfully");
+                }
+                else
+                {
+                    return BadRequest("Failed To Delete User");
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, $"Something went Wrong in the Regiter Method{nameof(Register)}");
+                //throw new EntityNotFoundException("Entity Not found", ex.InnerException);
+                //return StatusCode(500,$"Internal Server Error Please Try Again ");
+                return Problem($"Something Went Wrong in the {nameof(Register)}", statusCode: 500);
+            }
+
+        }
+
+
+
+        [HttpPost]
+        [Route("UpdateUser")]
+        public async Task<IActionResult> UpdateUser(string UserId, [FromBody] UserUpdateDto userUpdateModel)
+        {
+
+            try
+            {
+                var user = await _userManger.FindByIdAsync(UserId);
+                if (user == null)
+                {
+                    return NotFound("User Not Found");
+                }
+                user.FirstName = userUpdateModel.FirstName;
+                user.LastName = userUpdateModel.LastName;
+                user.PhoneNumber = userUpdateModel.PhoneNumber;
+                user.Email = userUpdateModel.Email;
+
+                var result = await _userManger.UpdateAsync(user);
+                if (result.Succeeded)
+                {
+                    return Ok("User Deleted Successfully");
+                }
+                else
+                {
+                    return BadRequest("Failed To Delete User");
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, $"Something went Wrong in the Regiter Method{nameof(Register)}");
+                //throw new EntityNotFoundException("Entity Not found", ex.InnerException);
+                //return StatusCode(500,$"Internal Server Error Please Try Again ");
+                return Problem($"Something Went Wrong in the {nameof(Register)}", statusCode: 500);
+            }
+
+        }
+
+
+        [HttpPost]
+        [Route("CreateUserRole")]
+        public async Task<IActionResult> CreateUserRole(string UserId, [FromBody] UserDto userDto)
+        {
+
+            try
+            {
+                var user = _mapper.Map<ApplicationUser>(userDto);
+
+                if (!await _roleManager.RoleExistsAsync(userDto.Role))
+                {
+                    var newrole = new IdentityRole(userDto.Role);
+                    var RoleResult = await _roleManager.CreateAsync(newrole);
+                    await _userManger.AddToRoleAsync(user, userDto.Role);
+
+                    if (!RoleResult.Succeeded)
+                    {
+                        // Role creation successful
+                        foreach (var error in RoleResult.Errors)
+                        {
+                            _logger.LogError($"Role Creation Went Wrong {error}");
+                        }
+                        return Problem($"Something Went Wrong in the {nameof(Register)}", statusCode: 500);
+                    }
+                }
+                else
+                {
+                    _logger.LogError($"Role already Exists...{nameof(Register)}");
+                    return Problem($"Something Went Wrong in the {nameof(Register)}", statusCode: 409);
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, $"Something went Wrong in the Regiter Method{nameof(Register)}");
+                //throw new EntityNotFoundException("Entity Not found", ex.InnerException);
+                //return StatusCode(500,$"Internal Server Error Please Try Again ");
+                return Problem($"Something Went Wrong in the {nameof(Register)}", statusCode: 500);
+            }
+            return Ok($"Role Created {userDto.Role}");
+        }
+
+
+
+        [HttpPost]
+        [Route("UpdateUserRole")]
+        [Authorize(Roles = UserRoles.Admin)]
+        public async Task<IActionResult> UpdateUserRole(string UserId, [FromBody] UserDto userDto)
+        {
+
+            try
+            {
+                var user = _mapper.Map<ApplicationUser>(userDto);
+
+                if (await _roleManager.RoleExistsAsync(userDto.Role))
+                {
+                    var newrole = new IdentityRole(userDto.Role);
+                    var RoleResult = await _roleManager.UpdateAsync(newrole);
+                    if (!RoleResult.Succeeded)
+                    {
+                        // Role creation successful
+                        foreach (var error in RoleResult.Errors)
+                        {
+                            _logger.LogError($"Role Creation Went Wrong {error}");
+                        }
+                        return Problem($"Something Went Wrong in the {nameof(Register)}", statusCode: 500);
+                    }
+                }
+                else
+                {
+                    _logger.LogError($"Role already Exists...{nameof(Register)}");
+                    return Problem($"Something Went Wrong in the {nameof(Register)}", statusCode: 409);
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, $"Something went Wrong in the Regiter Method{nameof(Register)}");
+                //throw new EntityNotFoundException("Entity Not found", ex.InnerException);
+                //return StatusCode(500,$"Internal Server Error Please Try Again ");
+                return Problem($"Something Went Wrong in the {nameof(Register)}", statusCode: 500);
+            }
+            return Ok($"Role Created {userDto.Role}");
+        }
+
+        //////////-----------------------------------------------------------------------------------------------
         //[HttpPost]
         //public async Task<ActionResult<UserDto>> Login([FromBody] LoginBindingModel model) 
         //{

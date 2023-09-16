@@ -1,0 +1,6 @@
+
+
+@host=https://localhost:7106
+
+
+POST {{host}}/Account/Register

@@ -1,6 +1,7 @@
 ﻿
 using Ecommerce.Business.Services;
 using Ecommerce.Common.Interfaces;
+
 using Microsoft.Extensions.DependencyInjection;
 using System;
 using System.Collections.Generic;
@@ -25,6 +26,7 @@ namespace Ecommerce.Business
             services.AddScoped<IJobService, JobService>();
             services.AddScoped<IEmployeeService, EmployeeService>();
             services.AddScoped<IAddressService, AddressService>();
+            services.AddScoped<ITokenService, TokenServices>();
         }
     }
 }
